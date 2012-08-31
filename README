@@ -1,0 +1,19 @@
+This layer depends on:
+
+URI: git://git.openembedded.org/openembedded-core
+branch: master
+revision: HEAD
+
+Send pull requests to openembedded-devel@lists.openembedded.org with '[meta-oe]' in the subject'
+
+When sending single patches, please use something like 'git send-email -1 --to openembedded-devel@lists.openembedded.org --subject-prefix=meta-oe][PATCH'
+
+You are encouraged to fork the mirror on github https://github.com/openembedded/meta-oe/ to share your patches. This method is preferred for patch sets consisting of more than one patch. Other services like gitorious, repo.or.cz or self hosted setups are also accepted, as 'git fetch <remote>' works the same on all of them. We recommend github because it is free, easy to use, has been proven to be reliable and has a really good web GUI.
+
+Main layer maintainer: Koen Kooi <koen@dominion.thruhere.net>
+
+---
+
+webos note:
+
+This is a partial set of the original meta-oe/meta-oe layer, as we want to eliminate the accumulative behavior of multiple bbappends by only including what is needed to build the packages.

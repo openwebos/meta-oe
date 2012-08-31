@@ -1,0 +1,133 @@
+commit 7d672a6cd0eb59cc4778acb49248fc421bcd75bb
+Author: Vitali Lovich <vitali.lovich@palm.com>
+Date:   Wed Feb 24 13:54:27 2010 -0800
+
+    Add more fine-grained control over how the project is configured so we
+    don't have to build more than we need to.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d9d04fe..0654ceb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -67,11 +67,25 @@ ELSE (WIN32)
+   SET(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -O2 -Wuninitialized")
+ ENDIF (WIN32) 
+ 
++OPTION(WITH_TESTS "Build the tests for yajl" TRUE)
++OPTION(WITH_UTILS "Build the yajl utilities" TRUE)
++OPTION(WITH_DOCS "Build the yajl documentation" TRUE)
++OPTION(WITH_SHARED_LIB "Build the shared yajl library" TRUE)
++OPTION(WITH_STATIC_LIB "Build the static yajl library" TRUE)
++
++IF (NOT WITH_SHARED_LIB AND NOT WITH_STATIC_LIB)
++	MESSAGE(FATAL_ERROR "Shared and static library building disasbled - cannot build yajl")
++ENDIF ()
+ 
+ ADD_SUBDIRECTORY(src)
+-ADD_SUBDIRECTORY(test)
+-ADD_SUBDIRECTORY(reformatter)
+-ADD_SUBDIRECTORY(verify)
++IF (WITH_TESTS)
++	ADD_SUBDIRECTORY(test)
++ENDIF (WITH_TESTS)
++
++IF (WITH_UTILS)
++	ADD_SUBDIRECTORY(reformatter)
++	ADD_SUBDIRECTORY(verify)
++ENDIF (WITH_UTILS)
+ 
+ INCLUDE(YAJLDoc.cmake)
+ 
+diff --git a/YAJLDoc.cmake b/YAJLDoc.cmake
+index c8a1923..1cb93c7 100644
+--- a/YAJLDoc.cmake
++++ b/YAJLDoc.cmake
+@@ -1,4 +1,10 @@
+-FIND_PACKAGE(Doxygen)
++IF (WITH_DOCS)
++  FIND_PACKAGE(Doxygen)
++  SET(DOXYGEN_ERR "doxygen not installed, not generating documentation")
++ELSE (WITH_DOCS)
++  SET(DOXYGEN_ERR "doxygen not configured to be built, not generating documentation")
++  SET(DOXYGEN_FOUND FALSE)
++ENDIF (WITH_DOCS)
+ 
+ IF (DOXYGEN_FOUND)
+   SET (YAJL_VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
+@@ -16,13 +22,14 @@ IF (DOXYGEN_FOUND)
+   ADD_CUSTOM_TARGET(yajl-doc
+                     ${DOXYGEN_EXECUTABLE} YAJL.dxy   
+                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+-
+ ELSE (DOXYGEN_FOUND)
+-  MESSAGE("!! doxygen not found, not generating documentation")
+-   
++  IF (WITH_DOCS)
++    MESSAGE("!! doxygen not found, not generating documentation")
++  ENDIF (WITH_DOCS)
++ 
+   ADD_CUSTOM_TARGET(
+     yajl-doc
+-    echo doxygen not installed, not generating documentation
++    echo ${DOXYGEN_ERR}
+   )
+ ENDIF (DOXYGEN_FOUND)
+ 
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 59027cb..b9c0dca 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -43,14 +43,20 @@ SET (incDir ${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/include/yajl)
+ # set the output path for libraries
+ SET(LIBRARY_OUTPUT_PATH ${libDir})
+ 
+-ADD_LIBRARY(yajl_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
++IF (WITH_STATIC_LIB)
++  ADD_LIBRARY(yajl_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
++ENDIF (WITH_STATIC_LIB)
+ 
+-ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
++IF (WITH_SHARED_LIB)
++  ADD_LIBRARY(yajl SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
++ENDIF (WITH_SHARED_LIB)
+ 
+ #### setup shared library version number
+-SET_TARGET_PROPERTIES(yajl PROPERTIES
+-                      SOVERSION ${YAJL_MAJOR}
+-                      VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
++IF (WITH_SHARED_LIB)
++  SET_TARGET_PROPERTIES(yajl PROPERTIES
++                        SOVERSION ${YAJL_MAJOR}
++                        VERSION ${YAJL_MAJOR}.${YAJL_MINOR}.${YAJL_MICRO})
++ENDIF ()
+ 
+ #### build up an sdk as a post build step
+ 
+@@ -64,15 +70,23 @@ FOREACH (header ${PUB_HDRS})
+ 
+   EXEC_PROGRAM(${CMAKE_COMMAND} ARGS -E copy_if_different ${header} ${incDir})
+ 
+-  ADD_CUSTOM_COMMAND(TARGET yajl_s POST_BUILD
+-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir})
++  IF (WITH_STATIC_LIB)
++    ADD_CUSTOM_COMMAND(TARGET yajl_s POST_BUILD
++        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir})
++  ENDIF ()
+ ENDFOREACH (header ${PUB_HDRS})
+ 
+ INCLUDE_DIRECTORIES(${incDir}/..)
+ 
+ IF(NOT WIN32)
+-  INSTALL(TARGETS yajl LIBRARY DESTINATION lib)
+-  INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib)
++  IF (WITH_SHARED_LIB)
++    INSTALL(TARGETS yajl LIBRARY DESTINATION lib)
++  ENDIF ()
++
++  IF (WITH_STATIC_LIB)
++    INSTALL(TARGETS yajl_s ARCHIVE DESTINATION lib)
++  ENDIF ()
++
+   INSTALL(DIRECTORY api/ DESTINATION include/yajl
+           FILES_MATCHING PATTERN "*.h")
+ ENDIF()

@@ -1,0 +1,19 @@
+diff -rupN orc-0.4.14/orc/orccodemem.c orc-0.4.14-2/orc/orccodemem.c
+--- orc-0.4.14/orc/orccodemem.c	2011-04-28 00:29:24.000000000 +0200
++++ orc-0.4.14-2/orc/orccodemem.c	2011-09-21 02:55:00.000000000 +0200
+@@ -259,6 +259,7 @@ orc_code_region_allocate_codemem (OrcCod
+ {
+   const char *tmpdir;
+ 
++/*
+   tmpdir = getenv ("TMPDIR");
+   if (tmpdir && orc_code_region_allocate_codemem_dual_map (region,
+         tmpdir, FALSE)) return;
+@@ -269,6 +270,7 @@ orc_code_region_allocate_codemem (OrcCod
+ 
+   if (orc_code_region_allocate_codemem_dual_map (region, "/tmp", FALSE))
+     return;
++*/
+ 
+   if (orc_code_region_allocate_codemem_anon_map (region)) return;
+   

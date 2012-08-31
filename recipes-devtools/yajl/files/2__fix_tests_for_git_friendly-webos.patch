@@ -1,0 +1,57 @@
+commit df81b520ea50e9c4900ac3d95f13812ab902df40
+Author: Vitali Lovich <vitali.lovich@palm.com>
+Date:   Tue Nov 3 13:48:18 2009 -0800
+
+    Fix up tests to be more git submodule friendly.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d47dd2c..6b1d564 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -75,8 +75,4 @@ ADD_SUBDIRECTORY(verify)
+ 
+ INCLUDE(YAJLDoc.cmake)
+ 
+-# a test target
+-ADD_CUSTOM_TARGET(test
+-                  ./run_tests.sh
+-                  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+ 
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index 85d673d..7d82954 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -37,3 +37,20 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${YAJL_DIST_NAME}/lib)
+ ADD_EXECUTABLE(yajl_test ${SRCS})
+ 
+ TARGET_LINK_LIBRARIES(yajl_test yajl_s)
++
++# a test target
++ADD_CUSTOM_TARGET(yajl-test
++                  ./run_tests.sh
++                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
++ADD_CUSTOM_TARGET(yajl-copy_test_dir cmake "-E" "copy_directory"
++	"${CMAKE_CURRENT_SOURCE_DIR}/cases"
++	"${CMAKE_CURRENT_BINARY_DIR}/cases")
++ADD_CUSTOM_TARGET(yajl-copy_test_runner cmake "-E" "copy"
++	"${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh"
++	"${CMAKE_CURRENT_BINARY_DIR}")
++IF(NOT TARGET tests)
++	ADD_CUSTOM_TARGET(tests)
++ENDIF(NOT TARGET tests)
++
++ADD_DEPENDENCIES(yajl-test yajl-copy_test_dir yajl-copy_test_runner)
++ADD_DEPENDENCIES(tests yajl-test)
+diff --git a/test/run_tests.sh b/test/run_tests.sh
+index 174932f..510d048 100755
+--- a/test/run_tests.sh
++++ b/test/run_tests.sh
+@@ -10,7 +10,7 @@ fi
+ if [ -z "$testBin" ]; then
+ 	testBin="../build/test/Debug/yajl_test.exe"
+ 	if [[ ! -x $testBin ]] ; then
+-	  testBin="../build/test/yajl_test"
++	  testBin="./yajl_test"
+ 	  if [[ ! -x $testBin ]] ; then
+ 	    echo "cannot execute test binary: '$testBin'"  
+ 	    exit 1;

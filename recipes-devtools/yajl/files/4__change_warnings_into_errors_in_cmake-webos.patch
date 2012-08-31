@@ -1,0 +1,29 @@
+commit 7ce0be9546cda0fbff4feee5f9f57a4f06a8d758
+Author: Vitali Lovich <vitali.lovich@palm.com>
+Date:   Wed Feb 24 12:21:02 2010 -0800
+
+    Make warnings into errors.  Define macro necessary for isnan/isinf to be
+    provided by math.h on gcc.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6b1d564..d9d04fe 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -42,7 +42,7 @@ IF (NOT CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE "Release")
+ ENDIF (NOT CMAKE_BUILD_TYPE)
+ 
+-SET(CMAKE_C_FLAGS "-Wall")
++SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+ IF (WIN32) 
+   SET(linkFlags "/PDB:NONE /INCREMENTAL:NO /OPT:NOREF /OPT:NOICF")
+   SET(CMAKE_EXE_LINKER_FLAGS    "${linkFlags}"
+@@ -61,7 +61,7 @@ IF (WIN32)
+   SET(CMAKE_C_FLAGS_RELEASE "/D NDEBUG /O2")
+ ELSE (WIN32)
+   SET(CMAKE_C_FLAGS
+-      "${CMAKE_C_FLAGS} -fPIC -ansi -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wextra	-Wundef -Wwrite-strings -Wold-style-definition -Wno-missing-field-initializers -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes")
++      "${CMAKE_C_FLAGS} -fPIC -ansi -pedantic -Wpointer-arith -Wno-format-y2k -Wstrict-prototypes -Wmissing-declarations -Wnested-externs -Wextra	-Wundef -Wwrite-strings -Wold-style-definition -Wno-missing-field-initializers -Wredundant-decls -Wno-unused-parameter -Wno-sign-compare -Wmissing-prototypes -Werror -D_ISOC99_SOURCE")
+ 
+   SET(CMAKE_C_FLAGS_DEBUG "-DDEBUG -g")
+   SET(CMAKE_C_FLAGS_RELEASE "-DNDEBUG -O2 -Wuninitialized")
